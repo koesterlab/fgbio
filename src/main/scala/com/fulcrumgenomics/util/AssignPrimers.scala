@@ -43,7 +43,7 @@ import com.fulcrumgenomics.sopt.{arg, clp}
     |The read sequence of the primer is not checked against the expected reference sequence at the primer's genomic
     |coordinates.
     |
-    |In some cases, large deletions within one end of a read pair may cause a primary and supplementary alignment to be
+    |In some cases, large deletions within one end of a read pair may cause a primary and supplementary alignments to be
     |produced by the aligner, with the supplementary alignment containing the primer end of the read (5' sequencing order).
     |In this case, the primer may not be assigned for this end of the read pair.  Therefore, it is recommended to prefer
     |or choose the primary alignment that has the closest aligned read base to the 5' end of the read in sequencing order.
@@ -270,4 +270,3 @@ object AssignPrimersMetric {
   /** The name to use for the [[AssignPrimersMetric]] calculated over all amplicons */
   val AllAmpliconsIdentifier: String = "AllAmplicons"
 }
-
