@@ -272,10 +272,16 @@ case class SequenceDictionary(infos: IndexedSeq[SequenceMetadata]) extends Itera
 }
 
 
-/** Contains useful converters to and from HTSJDK objects. */
+/** Contains useful converters to and from HTSJDK objects.
+  *
+  * These converters are computationally expensive, so it is best to only use them once when converting a sequence
+  * dictionary or sequence record.
+  *
+  *
+  * */
 object Converters {
 
-  /** Converter from a [[SequenceMetadata]] to a [[SAMSequenceRecord]] */
+  /** Converter from a [[SequenceMetadata]] to a [[SAMSequenceRecord]].  Warning: this is computationally expensive. */
   implicit class ToSAMSequenceRecord(info: SequenceMetadata) {
     def asSam: SAMSequenceRecord = {
       val rec = new SAMSequenceRecord(info.name, info.length)
@@ -285,7 +291,7 @@ object Converters {
     }
   }
 
-  /** Converter from a [[SAMSequenceRecord]] to a [[SequenceMetadata]] */
+  /** Converter from a [[SAMSequenceRecord]] to a [[SequenceMetadata]].  Warning: this is computationally expensive. */
   implicit class FromSAMSequenceRecord(rec: SAMSequenceRecord) {
     def fromSam: SequenceMetadata = {
       val attributes: Map[String, String] = rec.getAttributes.map { entry =>
@@ -300,7 +306,7 @@ object Converters {
     }
   }
 
-  /** Converter from a [[SequenceDictionary]] to a [[SAMSequenceDictionary]] */
+  /** Converter from a [[SequenceDictionary]] to a [[SAMSequenceDictionary]].  Warning: this is computationally expensive. */
   implicit class ToSAMSequenceDictionary(infos: SequenceDictionary) {
     def asSam: SAMSequenceDictionary = {
       val recs = infos.iterator.zipWithIndex.map { case (info, index) =>
@@ -310,7 +316,7 @@ object Converters {
     }
   }
 
-  /** Converter from a [[SAMSequenceDictionary]] to a [[SequenceDictionary]] */
+  /** Converter from a [[SAMSequenceDictionary]] to a [[SequenceDictionary]].  Warning: this is computationally expensive. */
   implicit class FromSAMSequenceDictionary(dict: SAMSequenceDictionary) {
     def fromSam: SequenceDictionary = SequenceDictionary(dict.getSequences.map(_.fromSam).toIndexedSeq)
   }
