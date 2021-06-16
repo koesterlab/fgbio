@@ -64,7 +64,7 @@ case class Amplicon
 ) extends GenomicSpan with Metric {
   @inline def contig: String  = chrom
 
-  val (s, e, lpl) = (left_start, left_end, right_start, right_end) match {
+  val (s, e, longest_primer_length, left_primer_length, right_primer_length, left_primer_location, right_primer_location) = (left_start, left_end, right_start, right_end) match {
     case (Some(left_start), Some(left_end), Some(right_start), Some(right_end)) =>
       require(left_start <= left_end, f"leftStart is > leftEnd: $this")
       require(right_start <= right_end, f"rightStart is > rightEnd: $this")
@@ -73,11 +73,11 @@ case class Amplicon
       def leftPrimerLength: Int       = CoordMath.getLength(left_start, left_end)
       def rightPrimerLength: Int      = CoordMath.getLength(right_start, right_end)
       def longestPrimerLength: Int    = Math.max(leftPrimerLength, rightPrimerLength)
-      def leftPrimerLocation: String  = f"$chrom:$left_start-$left_end"
-      def rightPrimerLocation: String = f"$chrom:$right_start-$right_end"
+      def leftPrimerLocation: Option[String]  = Some(f"$chrom:$left_start-$left_end")
+      def rightPrimerLocation: Option[String] = Some(f"$chrom:$right_start-$right_end")
       def ampliconLocation: String    = f"$chrom:$left_start-$right_end"
       def identifier: String          = this.id.getOrElse(ampliconLocation)
-      (left_start, right_end, Math.max(leftPrimerLength, rightPrimerLength))
+      (left_start, right_end, Math.max(leftPrimerLength, rightPrimerLength), leftPrimerLength, rightPrimerLength, leftPrimerLocation, rightPrimerLocation)
     case (Some(left_start), Some(left_end), None, None) =>
       require(left_start <= left_end, f"leftStart is > leftEnd: $this")
       @inline def leftStart: Int  = left_start
@@ -85,8 +85,8 @@ case class Amplicon
       def leftPrimerLength: Int       = CoordMath.getLength(leftStart, leftEnd)
       def rightPrimerLength: Int      = 0
       def longestPrimerLength: Int    = leftPrimerLength
-      def leftPrimerLocation: String  = f"$chrom:$leftStart-$leftEnd"
-      (left_start, leftEnd, leftPrimerLength)
+      def leftPrimerLocation: Option[String]  = Some(f"$chrom:$leftStart-$leftEnd")
+      (left_start, leftEnd, leftPrimerLength, leftPrimerLength, 0, leftPrimerLocation, None)
     case (None, None, Some(right_start), Some(right_end)) => 
       require(right_start <= right_end, f"rightStart is > rightEnd: $this")
       @inline def rightStart: Int = right_start
@@ -94,12 +94,18 @@ case class Amplicon
 
       def leftPrimerLength: Int       = 0
       def rightPrimerLength: Int      = CoordMath.getLength(rightStart, rightEnd)
-      def rightPrimerLocation: String = f"$chrom:$rightStart-$rightEnd"
-      (right_start, rightEnd, rightPrimerLength)
+      def rightPrimerLocation: Option[String] = Some(f"$chrom:$rightStart-$rightEnd")
+      (right_start, rightEnd, rightPrimerLength, 0, rightPrimerLength, None, rightPrimerLocation)
     case _ =>
       throw new Exception(s"At least (left_start and left_end) or (right_start and right_end) need to be set in every row of the primer file.")
   }
-  @inline def longestPrimerLength: Int  = lpl
   @inline def start: Int = s
   @inline def end: Int = e
+  def leftPrimerLength: Int       = left_primer_length
+  def rightPrimerLength: Int      = right_primer_length
+  def longestPrimerLength: Int    = longest_primer_length
+  def leftPrimerLocation: Option[String]  = left_primer_location
+  def rightPrimerLocation: Option[String] = right_primer_location
+  def ampliconLocation: String    = f"$chrom:$start-$end"
+  def identifier: String          = this.id.getOrElse(ampliconLocation)
 }
