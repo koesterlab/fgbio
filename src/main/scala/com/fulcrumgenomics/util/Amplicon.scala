@@ -56,11 +56,11 @@ object Amplicon {
   */
 case class Amplicon
 ( chrom: String,
-  private val left_start: Int,
-  private val left_end: Int,
-  private val right_start: Int,
-  private val right_end: Int, private val
-  id: Option[String] = None
+  private val left_start: Option[Int],
+  private val left_end: Option[Int],
+  private val right_start: Option[Int],
+  private val right_end: Option[Int],
+  private val id: Option[String] = None
 ) extends GenomicSpan with Metric {
   require(leftStart <= leftEnd, f"leftStart is > leftEnd: $this")
   require(rightStart <= rightEnd, f"rightStart is > rightEnd: $this")
