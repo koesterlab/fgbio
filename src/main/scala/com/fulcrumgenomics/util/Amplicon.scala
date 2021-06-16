@@ -80,24 +80,25 @@ case class Amplicon
       (left_start, right_end, Math.max(leftPrimerLength, rightPrimerLength), leftPrimerLength, rightPrimerLength, leftPrimerLocation, rightPrimerLocation)
     case (Some(left_start), Some(left_end), None, None) =>
       require(left_start <= left_end, f"leftStart is > leftEnd: $this")
-      @inline def leftStart: Int  = left_start
-      @inline def leftEnd: Int    = left_end
-      def leftPrimerLength: Int       = CoordMath.getLength(leftStart, leftEnd)
-      def leftPrimerLocation: Option[String]  = Some(f"$chrom:$leftStart-$leftEnd")
-      (left_start, leftEnd, leftPrimerLength, leftPrimerLength, 0, leftPrimerLocation, None)
+
+      def leftPrimerLength: Int       = CoordMath.getLength(left_start, left_end)
+      def leftPrimerLocation: Option[String]  = Some(f"$chrom:$left_start-$left_end")
+      (left_start, left_end, leftPrimerLength, leftPrimerLength, 0, leftPrimerLocation, None)
     case (None, None, Some(right_start), Some(right_end)) => 
       require(right_start <= right_end, f"rightStart is > rightEnd: $this")
-      @inline def rightStart: Int = right_start
-      @inline def rightEnd: Int   = right_end
 
-      def rightPrimerLength: Int      = CoordMath.getLength(rightStart, rightEnd)
-      def rightPrimerLocation: Option[String] = Some(f"$chrom:$rightStart-$rightEnd")
-      (right_start, rightEnd, rightPrimerLength, 0, rightPrimerLength, None, rightPrimerLocation)
+      def rightPrimerLength: Int      = CoordMath.getLength(right_start, right_start)
+      def rightPrimerLocation: Option[String] = Some(f"$chrom:$right_start-$right_start")
+      (right_start, right_end, rightPrimerLength, 0, rightPrimerLength, None, rightPrimerLocation)
     case _ =>
       throw new Exception(s"At least (left_start and left_end) or (right_start and right_end) need to be set in every row of the primer file.")
   }
   @inline def start: Int = s
   @inline def end: Int = e
+  @inline def leftStart: Option[Int]  = left_start
+  @inline def leftEnd: Option[Int]    = left_end
+  @inline def rightStart: Option[Int] = right_start
+  @inline def rightEnd: Option[Int]   = right_end
   def leftPrimerLength: Int       = left_primer_length
   def rightPrimerLength: Int      = right_primer_length
   def longestPrimerLength: Int    = longest_primer_length
