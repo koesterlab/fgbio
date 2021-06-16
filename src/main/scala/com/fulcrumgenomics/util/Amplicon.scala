@@ -83,8 +83,6 @@ case class Amplicon
       @inline def leftStart: Int  = left_start
       @inline def leftEnd: Int    = left_end
       def leftPrimerLength: Int       = CoordMath.getLength(leftStart, leftEnd)
-      def rightPrimerLength: Int      = 0
-      def longestPrimerLength: Int    = leftPrimerLength
       def leftPrimerLocation: Option[String]  = Some(f"$chrom:$leftStart-$leftEnd")
       (left_start, leftEnd, leftPrimerLength, leftPrimerLength, 0, leftPrimerLocation, None)
     case (None, None, Some(right_start), Some(right_end)) => 
@@ -92,7 +90,6 @@ case class Amplicon
       @inline def rightStart: Int = right_start
       @inline def rightEnd: Int   = right_end
 
-      def leftPrimerLength: Int       = 0
       def rightPrimerLength: Int      = CoordMath.getLength(rightStart, rightEnd)
       def rightPrimerLocation: Option[String] = Some(f"$chrom:$rightStart-$rightEnd")
       (right_start, rightEnd, rightPrimerLength, 0, rightPrimerLength, None, rightPrimerLocation)
@@ -106,6 +103,6 @@ case class Amplicon
   def longestPrimerLength: Int    = longest_primer_length
   def leftPrimerLocation: Option[String]  = left_primer_location
   def rightPrimerLocation: Option[String] = right_primer_location
-  def ampliconLocation: String    = f"$chrom:$start-$end"
+  def ampliconLocation: String    = f"$chrom:$start-$end" //TODO Does this make sense in case of single primers?!
   def identifier: String          = this.id.getOrElse(ampliconLocation)
 }
