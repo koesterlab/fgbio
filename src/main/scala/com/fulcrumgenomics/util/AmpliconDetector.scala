@@ -84,12 +84,14 @@ class AmpliconDetector(val detector: OverlapDetector[Amplicon],
   private[util] def findPrimer(refName: String, start: Int, end: Int, positiveStrand: Boolean): Option[Amplicon] = {
     val interval = new Interval(refName, start, end)
     val hits: Iterator[(Amplicon, Int)] = {
-      if (positiveStrand) detector.getOverlaps(interval).map(amp => amp.leftStart match { //TODO Define error case
+      if (positiveStrand) detector.getOverlaps(interval).map(amp => amp.leftStart match {
           case Some(leftStart) => (amp, abs(leftStart - start))
+          case None => throw new Exception(s"Left primer positions need to be defined.") //TODO Can this be reached/will getOverlap() find any results if no left primer exists?  
         }
       )
-      else detector.getOverlaps(interval).map(amp => amp.rightEnd match { //TODO Define error case
+      else detector.getOverlaps(interval).map(amp => amp.rightEnd match {
           case Some(rightEnd) => (amp, abs(rightEnd - end))
+          case None => throw new Exception(s"Right primer positions need to be defined.") //TODO Can this be reached/will getOverlap() find any results if no right primer exists?
         }
       )
     }
@@ -157,7 +159,7 @@ class AmpliconDetector(val detector: OverlapDetector[Amplicon],
           case (Some(left_start), Some(right_end)) => (amp, abs(left_start - start), abs(right_end - end))
           case (Some(left_start), None) => (amp, abs(left_start - start), 0)
           case (None, Some(right_end)) => (amp, 0, abs(right_end - end))
-          //TODO Define error case
+          case (None, None) => throw new Exception(s"Either left or right primer position need to be defined.")
         }
       )
       .filter(hit => hit._2 <= slop && hit._3 <= slop)
