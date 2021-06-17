@@ -33,24 +33,24 @@ class AmpliconDetectorTest extends UnitSpec with OptionValues {
 
   "AmpliconDetector.maxPrimerLength" should "return the maximum primer length" in {
     AmpliconDetector(
-      amplicons = Seq(Amplicon("chr1", 1, 10, 20, 40)),
+      amplicons = Seq(Amplicon("chr1", Some(1), Some(10), Some(20), Some(40))),
       slop      = 0,
       unclippedCoordinates = true
     ).maxPrimerLength shouldBe 21
     AmpliconDetector(
-      amplicons = Seq(Amplicon("chr1", 1, 20, 30, 40)),
+      amplicons = Seq(Amplicon("chr1", Some(1), Some(20), Some(30), Some(40))),
       slop      = 0,
       unclippedCoordinates = true
     ).maxPrimerLength shouldBe 20
     AmpliconDetector(
-      amplicons = Seq(Amplicon("chr1", 1, 21, 20, 40)),
+      amplicons = Seq(Amplicon("chr1", Some(1), Some(21), Some(20), Some(40))),
       slop      = 0,
       unclippedCoordinates = true
     ).maxPrimerLength shouldBe 21
   }
 
   "AmpliconDetector.findPrimer(refName: String, start: Int, end: Int, positiveStrand: Boolean)" should "not find any matches" in {
-    val amplicon = Amplicon("chr1", 1, 20, 80, 100)
+    val amplicon = Amplicon("chr1", Some(1), Some(20), Some(80), Some(100))
     val detector = AmpliconDetector(amplicons=Seq(amplicon), slop=0, unclippedCoordinates=true)
     // different refName
     detector.findPrimer(refName="chr2", start=1, end=20, positiveStrand=true).isEmpty shouldBe true
@@ -67,7 +67,7 @@ class AmpliconDetectorTest extends UnitSpec with OptionValues {
   }
 
   it should "find a match for overlaps" in {
-    val amplicon = Amplicon("chr1", 100, 120, 180, 200)
+    val amplicon = Amplicon("chr1", Some(100), Some(120), Some(180), Some(200))
     val detector = AmpliconDetector(amplicons=Seq(amplicon), slop=10, unclippedCoordinates=true)
 
     // left primer, exactly
@@ -92,7 +92,7 @@ class AmpliconDetectorTest extends UnitSpec with OptionValues {
   }
 
   it should "only return the hit with the smallest distance for multiple overlaps" in {
-    val amplicons = IndexedSeq(Amplicon("chr1", 100, 120, 180, 200), Amplicon("chr1", 110, 130, 190, 210))
+    val amplicons = IndexedSeq(Amplicon("chr1", Some(100), Some(120), Some(180), Some(200)), Amplicon("chr1", Some(110), Some(130), Some(190), Some(210)))
     val detector  = AmpliconDetector(amplicons=amplicons, slop=10, unclippedCoordinates=true)
 
     // amplicon #1 left primer, exactly
@@ -119,7 +119,7 @@ class AmpliconDetectorTest extends UnitSpec with OptionValues {
   }
 
   "AmpliconDetector.findPrimer(rec: SamRecord)" should "find matches using the aligned/clipped coordinates" in {
-    val amplicon = Amplicon("chr1", 100, 120, 180, 200)
+    val amplicon = Amplicon("chr1", Some(100), Some(120), Some(180), Some(200))
     val detector = AmpliconDetector(amplicons=Seq(amplicon), slop=5, unclippedCoordinates=false)
     val builder  = new SamBuilder()
 
@@ -139,7 +139,7 @@ class AmpliconDetectorTest extends UnitSpec with OptionValues {
   }
 
   it should "find matches using the unclipped coordinates" in {
-    val amplicon = Amplicon("chr1", 100, 120, 180, 200)
+    val amplicon = Amplicon("chr1", Some(100), Some(120), Some(180), Some(200))
     val detector = AmpliconDetector(amplicons=Seq(amplicon), slop=5, unclippedCoordinates=true)
     val builder  = new SamBuilder()
 
@@ -159,7 +159,7 @@ class AmpliconDetectorTest extends UnitSpec with OptionValues {
   }
 
   "AmpliconDetector.findMatePrimer(rec: SamRecord)" should "find matches for the mate using the aligned/clipped coordinates" in {
-    val amplicon = Amplicon("chr1", 100, 120, 180, 200)
+    val amplicon = Amplicon("chr1", Some(100), Some(120), Some(180), Some(200))
     val detector = AmpliconDetector(amplicons=Seq(amplicon), slop=0, unclippedCoordinates=false)
     val builder  = new SamBuilder()
     val Seq(r1, r2) = builder.addPair(start1=100, cigar1="10S90M40H", start2=101, cigar2="100M")
@@ -168,7 +168,7 @@ class AmpliconDetectorTest extends UnitSpec with OptionValues {
   }
 
   it should "find matches for the mate using the unclipped coordinates" in {
-    val amplicon = Amplicon("chr1", 100, 120, 180, 200)
+    val amplicon = Amplicon("chr1", Some(100), Some(120), Some(180), Some(200))
     val detector = AmpliconDetector(amplicons=Seq(amplicon), slop=0, unclippedCoordinates=true)
     val builder  = new SamBuilder()
     val Seq(r1, r2) = builder.addPair(start1=110, cigar1="10S90M40H", start2=101, cigar2="90M10S")
@@ -177,7 +177,7 @@ class AmpliconDetectorTest extends UnitSpec with OptionValues {
   }
 
   "AmpliconDetector.find(r1: SamRecord, r2: SamRecord)" should "not matches for anything not mapped in FR pairs" in {
-    val amplicon = Amplicon("chr1", 100, 120, 180, 200)
+    val amplicon = Amplicon("chr1", Some(100), Some(120), Some(180), Some(200))
     val detector = AmpliconDetector(amplicons=Seq(amplicon), slop=5, unclippedCoordinates=false)
     val builder  = new SamBuilder()
 
@@ -226,7 +226,7 @@ class AmpliconDetectorTest extends UnitSpec with OptionValues {
   }
 
   it should "find matches with aligned/clipped coordinates" in {
-    val amplicon = Amplicon("chr1", 100, 120, 180, 200)
+    val amplicon = Amplicon("chr1", Some(100), Some(120), Some(180), Some(200))
     val detector = AmpliconDetector(amplicons=Seq(amplicon), slop=5, unclippedCoordinates=false)
     val builder  = new SamBuilder()
 
@@ -254,7 +254,7 @@ class AmpliconDetectorTest extends UnitSpec with OptionValues {
   }
 
   it should "find matches with unclipped coordinates" in {
-    val amplicon = Amplicon("chr1", 100, 120, 180, 200)
+    val amplicon = Amplicon("chr1", Some(100), Some(120), Some(180), Some(200))
     val detector = AmpliconDetector(amplicons=Seq(amplicon), slop=5, unclippedCoordinates=true)
     val builder  = new SamBuilder()
 
@@ -282,7 +282,7 @@ class AmpliconDetectorTest extends UnitSpec with OptionValues {
   }
 
   it should "only return the hit with the smallest combined distance for multiple overlaps" in {
-    val amplicons = IndexedSeq(Amplicon("chr1", 100, 120, 180, 200), Amplicon("chr1", 110, 130, 190, 210))
+    val amplicons = IndexedSeq(Amplicon("chr1", Some(100), Some(120), Some(180), Some(200)), Amplicon("chr1", Some(110), Some(130), Some(190), Some(210)))
     val detector  = AmpliconDetector(amplicons=amplicons, slop=100, unclippedCoordinates=false)
     val builder   = new SamBuilder()
 

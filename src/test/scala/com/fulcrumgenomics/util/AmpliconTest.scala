@@ -30,7 +30,7 @@ import com.fulcrumgenomics.testing.UnitSpec
 class AmpliconTest extends UnitSpec {
 
   "Amplicon" should "store an amplicon" in {
-    val amplicon = Amplicon("chr1", 1, 2, 4, 8, id=Some("id"))
+    val amplicon = Amplicon("chr1", Some(1), Some(2), Some(4), Some(8), id=Some("id"))
     amplicon.leftPrimerLength shouldBe 2
     amplicon.rightPrimerLength shouldBe 5
     amplicon.longestPrimerLength shouldBe 5
@@ -42,7 +42,7 @@ class AmpliconTest extends UnitSpec {
 
   it should "round trip to disk amplicons with ids" in {
     val amplicons = Range.inclusive(start=1, end=100).map { i =>
-      Amplicon(f"chr${1 + (i%10)}", 1, 2+i, 4+i, 8+i, id=Some(f"id-$i"))
+      Amplicon(f"chr${1 + (i%10)}", Some(1), Some(2+i), Some(4+i), Some(8+i), id=Some(f"id-$i"))
     }
     val path = makeTempFile("some.", "metrics.txt")
     Metric.write(path=path, amplicons)
@@ -51,7 +51,7 @@ class AmpliconTest extends UnitSpec {
 
   it should "round trip to disk amplicons without ids" in {
     val amplicons = Range.inclusive(start=1, end=100).map { i =>
-      Amplicon(f"chr${1 + (i%10)}", 1, 2+i, 4+i, 8+i, id=None)
+      Amplicon(f"chr${1 + (i%10)}", Some(1), Some(2+i), Some(4+i), Some(8+i), id=None)
     }
     val path = makeTempFile("some.", "metrics.txt")
     Metric.write(path=path, amplicons)
