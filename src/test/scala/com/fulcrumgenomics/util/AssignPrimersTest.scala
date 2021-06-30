@@ -77,9 +77,9 @@ class AssignPrimersTest extends UnitSpec with OptionValues {
 
     // The amplicons to match against
     val amplicons = Seq(
-      Amplicon("chr1", Some(100), Some(120), Some(180), Some(200)),
-      Amplicon("chr1", Some(500), Some(520), Some(580), Some(600)),
-      Amplicon("chr5", Some(100), Some(120), Some(180), Some(200))
+      Amplicon("chr1", 100, 120, 180, 200),
+      Amplicon("chr1", 500, 520, 580, 600),
+      Amplicon("chr5", 100, 120, 180, 200)
     )
 
     // The reads to assign

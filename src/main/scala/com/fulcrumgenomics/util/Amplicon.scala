@@ -63,7 +63,7 @@ case class Amplicon
   private val id: Option[String] = None
 ) extends GenomicSpan with Metric {
   @inline def contig: String  = chrom
-  @inline def leftStart: Option[Int]  = if (left_start > -1) Some(left_start)  else None 
+  @inline def leftStart: Option[Int]  = if (left_start > -1) Some(left_start) else None 
   @inline def leftEnd: Option[Int]    = if (left_end > -1) Some(left_end)  else None
   @inline def rightStart: Option[Int] = if (right_start > -1) Some(right_start) else None
   @inline def rightEnd: Option[Int]   = if (right_end > -1) Some(right_end) else None 
@@ -102,6 +102,6 @@ case class Amplicon
   def longestPrimerLength: Int    = longest_primer_length
   def leftPrimerLocation: Option[String]  = left_primer_location
   def rightPrimerLocation: Option[String] = right_primer_location
-  def ampliconLocation: String    = f"$chrom:$start-$end" //TODO Does this make sense in case of single primers?!
+  def ampliconLocation: String    = f"$chrom:$start-$end"
   def identifier: String          = this.id.getOrElse(ampliconLocation)
 }

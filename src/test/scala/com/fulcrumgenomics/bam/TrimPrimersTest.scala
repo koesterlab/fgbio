@@ -36,10 +36,10 @@ import htsjdk.samtools.{CigarOperator => Op}
 
 class TrimPrimersTest extends UnitSpec {
   val amplicons: Seq[Amplicon] = Seq(
-    Amplicon("chr1", Some(100), Some(119), Some(200), Some(219)),
-    Amplicon("chr1", Some(200), Some(219), Some(300), Some(320)),
-    Amplicon("chr1", Some(300), Some(319), Some(400), Some(421)),
-    Amplicon("chr1", Some(400), Some(419), Some(500), Some(522))
+    Amplicon("chr1", 100, 119, 200, 219),
+    Amplicon("chr1", 200, 219, 300, 320),
+    Amplicon("chr1", 300, 319, 400, 421),
+    Amplicon("chr1", 400, 419, 500, 522)
   )
 
   val refFasta = Paths.get("src/test/resources/com/fulcrumgenomics/bam/trim_primers_test.fa")
