@@ -151,6 +151,7 @@ class TrimPrimers
   def trimReadsForTemplate(detector: AmpliconDetector, reads: Seq[SamRecord]): Unit = {
     val rec1 = reads.find(r => r.paired && r.firstOfPair  && !r.secondary && !r.supplementary)
     val rec2 = reads.find(r => r.paired && r.secondOfPair && !r.secondary && !r.supplementary)
+
     (rec1, rec2) match {
       case (Some(r1), Some(r2)) =>
         // FR mapped pairs get the full treatment
