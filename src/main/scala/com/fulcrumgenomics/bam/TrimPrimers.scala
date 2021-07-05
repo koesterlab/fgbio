@@ -76,6 +76,7 @@ import scala.collection.BufferedIterator
 class TrimPrimers
 ( @arg(flag='i', doc="Input BAM file.")  val input: PathToBam,
   @arg(flag='o', doc="Output BAM file.") val output: PathToBam,
+  @arg(flag='u', doc="Output BAM file for primerless reads.") val primerlessOutput: Option[PathToBam] = None,
   @arg(flag='p', doc="File with primer locations.") val primers: FilePath,
   @arg(flag='H', doc="If true, hard clip reads, else soft clip.") val hardClip: Boolean = false,
   @arg(flag='S', doc="Match to primer locations +/- this many bases.") val slop: Int = 5,
@@ -90,6 +91,11 @@ class TrimPrimers
   Io.assertReadable(input)
   Io.assertReadable(primers)
   Io.assertCanWriteFile(output)
+  primerlessOutput match {
+    case Some(primerless_path) =>
+      Io.assertCanWriteFile(primerless_path)
+    case None => ()
+  }
 
   override def execute(): Unit = {
     val in = SamSource(input)
@@ -106,14 +112,26 @@ class TrimPrimers
     //         i) No reference was given (so no coordinate sort) and the output sort order is queryname, or
     //        ii) A reference was given (so the last sort is coordinate) and the output sort order is coordinate
     //      else, we'll have to sort for potentially a third time in the SAMFileWriter
-    val (sorter, write: (SamRecord => Any), out: SamWriter) = ref match {
+    val (sorter, write: (SamRecord => Any), out: SamWriter, write_primerless_opt: Option[(SamRecord => Any)], primerless_out_opt: Option[SamWriter]) = ref match {
       case Some(_) =>
         val sorter = Bams.sorter(SamOrder.Coordinate, outHeader)
         val out = SamWriter(output, outHeader, sort= if (outSortOrder == SamOrder.Coordinate) None else Some(outSortOrder))
-        (Some(sorter), sorter.write _, out)
+        val (primerless_writer, primerless_out) = primerlessOutput match {
+          case Some(primerless_path) => 
+            val primerless_out = SamWriter(primerless_path, outHeader, sort= if (outSortOrder == SamOrder.Coordinate) None else Some(outSortOrder))
+            (Some(sorter.write _), Some(primerless_out))
+          case None => (None, None)
+        }
+        (Some(sorter), sorter.write _, out, primerless_writer, primerless_out)
       case None =>
         val out = SamWriter(output, outHeader, sort= if (outSortOrder == SamOrder.Queryname) None else Some(outSortOrder))
-        (None, out += _, out)
+        val (primerless_writer, primerless_out) = primerlessOutput match {
+          case Some(primerless_path) => 
+            val primerless_out = SamWriter(primerless_path, outHeader, sort= if (outSortOrder == SamOrder.Queryname) None else Some(outSortOrder))
+            (Some(primerless_out += _), Some(primerless_out))
+          case None => (None, None)
+        }
+        (None, out += _, out, primerless_writer, primerless_out)
     }
 
     val detector = new AmpliconDetector(
@@ -142,12 +160,16 @@ class TrimPrimers
     val trimProgress = ProgressLogger(this.logger, "Trimmed")
     while (iterator.hasNext) {
       val reads = nextTemplate(iterator)
-      trimReadsForTemplate(detector, reads)
-      reads.foreach(write)
+      val skip = trimReadsForTemplate(detector, reads)
+      (write_primerless_opt, skip) match {
+        case (Some(write_primerless), true) => reads.foreach(write_primerless)
+        case _ => reads.foreach(write)
+      }
       reads.foreach(trimProgress.record)
     }
 
     // If we had a reference and re-sorted above, reset the NM/UQ/MD tags as we push to the final output
+    //TODO How to implement resorting for primerless reads?
     (sorter, ref) match {
       case (Some(sorter), Some(path)) =>
         val walker = new ReferenceSequenceFileWalker(path.toFile)
@@ -164,6 +186,10 @@ class TrimPrimers
     }
 
     out.close()
+    primerless_out_opt match {
+      case Some(primerless_out) => primerless_out.close()
+      case _ => ()
+    }
   }
 
   /** Recalculates the MD, NM, and UQ tags on aligned records. */
@@ -178,12 +204,12 @@ class TrimPrimers
   }
 
   /** Trims all the reads for a given template. */
-  def trimReadsForTemplate(detector: AmpliconDetector, reads: Seq[SamRecord]): Unit = {
+  def trimReadsForTemplate(detector: AmpliconDetector, reads: Seq[SamRecord]): Boolean = {
     val rec1 = reads.find(r => r.paired && r.firstOfPair  && !r.secondary && !r.supplementary)
     val rec2 = reads.find(r => r.paired && r.secondOfPair && !r.secondary && !r.supplementary)
 
     val readsToClip = if (firstOfPair) reads.filter(_.firstOfPair) else reads
-
+    var skip = false;
     (rec1, rec2) match {
       case (Some(r1), Some(r2)) =>
         // FR mapped pairs get the full treatment
@@ -198,6 +224,7 @@ class TrimPrimers
                 this.clipper.clip5PrimeEndOfRead(rec, toClip)
               }
             case None =>
+              skip = true;
               readsToClip.foreach(r => this.clipper.clip5PrimeEndOfRead(r, detector.maxPrimerLength))
           }
 
@@ -217,6 +244,7 @@ class TrimPrimers
         // Just trim each read independently
         readsToClip.foreach(r => this.clipper.clip5PrimeEndOfRead(r, detector.maxPrimerLength))
     }
+    return skip
   }
 
   /** Gets an iterator in query name order over the records. */
