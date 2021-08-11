@@ -209,7 +209,7 @@ class TrimPrimers
     val rec2 = reads.find(r => r.paired && r.secondOfPair && !r.secondary && !r.supplementary)
 
     val readsToClip = if (firstOfPair) reads.filter(_.firstOfPair) else reads
-    var skip = false;
+    var skip = false
     (rec1, rec2) match {
       case (Some(r1), Some(r2)) =>
         // FR mapped pairs get the full treatment
@@ -224,7 +224,7 @@ class TrimPrimers
                 this.clipper.clip5PrimeEndOfRead(rec, toClip)
               }
             case None =>
-              skip = true;
+              skip = true
               readsToClip.foreach(r => this.clipper.clip5PrimeEndOfRead(r, detector.maxPrimerLength))
           }
 
@@ -232,6 +232,7 @@ class TrimPrimers
         }
         // Pairs without both reads mapped in FR orientation are just maximally clipped
         else {
+          skip = true
           readsToClip.foreach(r => this.clipper.clip5PrimeEndOfRead(r, detector.maxPrimerLength))
         }
 
@@ -242,6 +243,7 @@ class TrimPrimers
         }
       case _ =>
         // Just trim each read independently
+        skip = true
         readsToClip.foreach(r => this.clipper.clip5PrimeEndOfRead(r, detector.maxPrimerLength))
     }
     return skip
