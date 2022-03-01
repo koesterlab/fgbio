@@ -121,8 +121,9 @@ class CallMolecularConsensusReads
           """)
  val maxReads: Option[Int] = None,
  @arg(flag='B', doc="If true produce tags on consensus reads that contain per-base information.") val outputPerBaseTags: Boolean = DefaultProducePerBaseTags,
- @arg(flag='S', doc="The sort order of the output, if `:none:` then the same as the input.") val sortOrder: Option[SamOrder] = Some(SamOrder.Queryname),
- @arg(flag='D', doc="Turn on debug logging.") val debug: Boolean = false
+ @arg(flag='S', doc="The sort order of the output, the same as the input if not given.") val sortOrder: Option[SamOrder] = None,
+ @arg(flag='D', doc="Turn on debug logging.") val debug: Boolean = false,
+ @arg(doc="The number of threads to use while consensus calling.") val threads: Int = 1
 ) extends FgBioTool with LazyLogging {
 
   if (debug) Logger.level = LogLevel.Debug
@@ -134,6 +135,7 @@ class CallMolecularConsensusReads
   if (tag.length != 2)      throw new ValidationException("attribute must be of length 2")
   if (errorRatePreUmi < 0)  throw new ValidationException("Phred-scaled error rate pre UMI must be >= 0")
   if (errorRatePostUmi < 0) throw new ValidationException("Phred-scaled error rate post UMI must be >= 0")
+  validate(this.maxReads.forall(max => max >= this.minReads), "--max-reads must be >= --min-reads.")
 
   /** Main method that does the work of reading input files, creating the consensus reads, and writing the output file. */
   override def execute(): Unit = {
@@ -163,9 +165,11 @@ class CallMolecularConsensusReads
       rejects        = rej
     )
 
-    val iterator = new ConsensusCallingIterator(in.iterator, caller, Some(ProgressLogger(logger, unit=5e5.toInt)))
+    val progress = ProgressLogger(logger, unit=1e6.toInt)
+    val iterator = new ConsensusCallingIterator(in.iterator, caller, Some(progress), threads=threads)
     out ++= iterator
 
+    progress.logLast()
     in.safelyClose()
     out.close()
     rej.foreach(_.close())

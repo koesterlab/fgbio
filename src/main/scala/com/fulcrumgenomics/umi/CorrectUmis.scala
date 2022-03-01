@@ -144,7 +144,7 @@ class CorrectUmis
   rejects.foreach(Io.assertCanWriteFile(_))
 
   // Construct the cache
-  private val cache = new LeastRecentlyUsedCache[String,UmiMatch](maxEntries = cacheSize)
+  private lazy val cache = new LeastRecentlyUsedCache[String,UmiMatch](maxEntries = cacheSize)
 
   override def execute(): Unit = {
     // Construct the full set of UMI sequences to match again
@@ -185,7 +185,10 @@ class CorrectUmis
         case Some(umi: String) =>
           val sequences = umi.split('-')
           if (sequences.exists(_.length != umiLength)) {
-            if (wrongLengthRecords == 0) logger.warning(s"Read (${rec.name}) detected with unexpected length UMI(s): ${sequences.mkString(" ")}")
+            if (wrongLengthRecords == 0) {
+              logger.warning(s"Read (${rec.name}) detected with unexpected length UMI(s): ${sequences.mkString(" ")}.")
+              logger.warning(s"Expected UMI length: ${umiLength}")
+            }
             wrongLengthRecords += 1
             rejectOut.foreach(w => w += rec)
           }
